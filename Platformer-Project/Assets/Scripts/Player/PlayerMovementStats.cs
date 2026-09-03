@@ -15,32 +15,24 @@ public class PlayerMovementStats : ScriptableObject
     public float jumpHeight;
     public float initialJumpVelocity;
     public int maxJumps;
+    public float airAcceleration;
+    public float airDeceleration;
 
     [Header("Jump Timers")]
     public float timeTillJumpApex;
-    public float jumpHoldTime;
+    public float jumpBuffer; // allows a jump before hitting the ground 
     public float coyoteTime;
 
     [Header("Gravity Stats")]
     public float gravityScale;
+    public float groundingForce; //constant downward force
+    public float jumpEndEarlyGravityMultiplier;
 
     [Header("Collision Stats")]
     public float groundCheckDistance;
     public float ceilingCheckDistance;
 
-    private void OnValidate()
-    {
-        CalculateValues();
-    }
-
-    private void OnEnable()
-    {
-        CalculateValues();
-    }
-
-    private void CalculateValues()
-    {
-        gravityScale = -(2f * jumpHeight) / Mathf.Pow(timeTillJumpApex, 2f);
-        initialJumpVelocity = Mathf.Abs(gravityScale) * timeTillJumpApex;
-    }
+    [Header("Fall Stats")]
+    public float fallSpeed;
+    public float fallAcceleration;
 }

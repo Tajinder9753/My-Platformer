@@ -23,7 +23,8 @@ public class PlayerController : MonoBehaviour
     private bool isFalling = false;
     public int numJumpsUsed = 0;
     private bool isJumping = false;
-    private bool jumpReleasedDuringBuffer = false;
+    private bool endedJumpEarly = false;
+    private bool coyoteUsable = true;
 
     //jumping timers
     private float jumpBufferCounter;
@@ -37,7 +38,6 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
-        JumpChecks();
         UpdateTimers();
     }
 
@@ -45,6 +45,7 @@ public class PlayerController : MonoBehaviour
     {
         CheckCollisions();
         HandleJumping();
+        HandleGravity();
         HandleMovement();
     }
 
@@ -84,6 +85,7 @@ public class PlayerController : MonoBehaviour
         if (ceilingHit.collider != null)
         {
             hitHead = true;
+            verticalVelocity = 0f;
         }
         else
         {
@@ -118,40 +120,35 @@ public class PlayerController : MonoBehaviour
 
     #region jumping
 
-    private void JumpChecks()
-    {
-        if (inputHandler.jumpWasPressed && numJumpsUsed < moveStats.maxJumps)
-        {
-            InitiateJump(1);
-            inputHandler.jumpWasPressed = false;
-        }
-    }
     //handles vertical movement (jumping)
     private void HandleJumping()
     {
-        if (isGrounded && verticalVelocity <= 0f)
-        {
-            verticalVelocity = -1f;
-        }
-        else
-        {
-            verticalVelocity += moveStats.gravityScale * Time.fixedDeltaTime;
-        }
+
     }
 
     private void InitiateJump(int numJumps)
     {
-        if (!isJumping)
-        {
-            isJumping = true;
-        }
 
-        jumpBufferCounter = 0f;
-        numJumpsUsed += numJumps;
-        verticalVelocity = moveStats.initialJumpVelocity;
     }
 
     #endregion
+
+    private void HandleGravity()
+    {
+        if (isGrounded && moveVelocity.y <= 0f)
+        {
+            verticalVelocity = moveStats.groundingForce;
+        }
+        else
+        {
+            float inAirGravity = moveStats.fallAcceleration;
+            if (endedJumpEarly && verticalVelocity > 0f)
+            {
+                inAirGravity *= moveStats.jumpEndEarlyGravityMultiplier;
+            }
+            verticalVelocity = Mathf.MoveTowards(verticalVelocity, -moveStats.fallSpeed, inAirGravity * Time.fixedDeltaTime);
+        }
+    }
 
     #region timers
     private void UpdateTimers()
