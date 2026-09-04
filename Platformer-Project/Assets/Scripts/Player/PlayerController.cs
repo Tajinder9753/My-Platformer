@@ -90,16 +90,33 @@ public class PlayerController : MonoBehaviour
 
     private void BumpedHead()
     {
-        Vector2 boxCastOrigin = new Vector2(headCol.bounds.center.x, headCol.bounds.max.y);
-        Vector2 boxCastSize = new Vector2(headCol.bounds.size.x, moveStats.ceilingCheckDistance);
-        ceilingHit = Physics2D.BoxCast(boxCastOrigin, boxCastSize, 0f, Vector2.up, 0f, moveStats.groundLayer);
+        float rayLength = moveStats.ceilingCheckDistance;
+        float cornerCheckDistance = moveStats.cornerCheckDistance;
 
-        if (ceilingHit.collider != null)
+        Vector2 leftOrigin = new Vector2(headCol.bounds.min.x + cornerCheckDistance, headCol.bounds.max.y);
+        Vector2 rightOrigin = new Vector2(headCol.bounds.max.x - cornerCheckDistance, headCol.bounds.max.y);
+
+        RaycastHit2D leftHit = Physics2D.Raycast(leftOrigin, Vector2.up, rayLength, moveStats.groundLayer);
+        RaycastHit2D rightHit = Physics2D.Raycast(rightOrigin, Vector2.up, rayLength, moveStats.groundLayer);
+
+        bool hitLeft = leftHit.collider != null;
+        bool hitRight = rightHit.collider != null;
+
+        //hit a ceiling 
+        if (hitLeft && hitRight)
         {
             hitHead = true;
             isFastFalling = true;
             verticalVelocity = 0f;
         }
+        //hit an edge, help player move upwards still just away from the ledge 
+        else if (hitLeft || hitRight)
+        {
+            hitHead = false;
+            float nudgeDirection = hitLeft ? 1f : -1f;
+            transform.position += new Vector3(nudgeDirection * moveStats.nudgeDistance, 0f, 0f);
+        }
+
         else
         {
             hitHead = false;

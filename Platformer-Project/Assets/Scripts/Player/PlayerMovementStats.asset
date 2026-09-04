@@ -15,17 +15,19 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 128
-  moveSpeed: 5
-  groundAcceleration: 3
-  groundDeceleration: 3
+  moveSpeed: 12
+  groundAcceleration: 3.5
+  groundDeceleration: 5.1
   groundCheckDistance: 0.1
-  ceilingCheckDistance: 0.25
-  maxJumpHeight: 10
+  ceilingCheckDistance: 0.15
+  cornerCheckDistance: 0.05
+  nudgeDistance: 0.15
+  maxJumpHeight: 6
   timeTillJumpApex: 0.35
   gravityOnReleaseMultiplier: 2
   maxFallSpeed: 50
   maxjumps: 2
   jumpBufferTime: 0
   jumpCoyoteTime: 0.5
-  gravity: -163.26532
-  maxJumpVelocity: 57.14286
+  gravity: -97.95919
+  maxJumpVelocity: 34.285717

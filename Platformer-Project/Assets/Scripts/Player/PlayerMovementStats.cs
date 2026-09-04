@@ -16,6 +16,10 @@ public class PlayerMovementStats : ScriptableObject
     public float groundCheckDistance;
     public float ceilingCheckDistance;
 
+    [Header("Edge Assist Stats")]
+    public float cornerCheckDistance;
+    public float nudgeDistance;
+
     [Header("Jump Stats")]
     public float maxJumpHeight; //how high will jump
     public float timeTillJumpApex; //time it takes to reach the apex of the jump
