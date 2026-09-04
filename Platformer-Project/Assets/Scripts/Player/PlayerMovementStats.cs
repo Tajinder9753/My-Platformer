@@ -22,6 +22,7 @@ public class PlayerMovementStats : ScriptableObject
 
     [Header("Jump Stats")]
     public float maxJumpHeight; //how high will jump
+    public float minJumpHeight; //shorter jump height for buffered jump
     public float timeTillJumpApex; //time it takes to reach the apex of the jump
     public float gravityOnReleaseMultiplier; //multiplier for gravity when jump button is released early
     public float maxFallSpeed; //maximum speed the player can fall
@@ -35,6 +36,7 @@ public class PlayerMovementStats : ScriptableObject
 
     public float gravity;
     public float maxJumpVelocity;
+    public float minJumpVelocity; //for buffered jump 
     private void OnValidate()
     {
         CalculateValues();
@@ -49,5 +51,6 @@ public class PlayerMovementStats : ScriptableObject
     {
         gravity = -(2f * maxJumpHeight) / Mathf.Pow(timeTillJumpApex, 2f);
         maxJumpVelocity = Mathf.Abs(gravity) * timeTillJumpApex;
+        minJumpVelocity = Mathf.Sqrt(2 * Mathf.Abs(gravity) * minJumpHeight);
     }
 }

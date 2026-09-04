@@ -75,11 +75,16 @@ public class PlayerController : MonoBehaviour
         if (groundHit.collider != null)
         {
             isGrounded = true;
-            numJumpsUsed = 0;
             if (!isJumping)
             {
                 isFastFalling = false;
+                numJumpsUsed = 0;
                 verticalVelocity = 0f;
+            }
+
+            if (jumpBufferTimer > 0f)
+            {
+                InitiateJump(1, true);
             }
         }
         else
@@ -189,14 +194,20 @@ public class PlayerController : MonoBehaviour
             //initiate jump if grounded or within coyote time
             if ((isGrounded || coyoteTimer > 0f) && numJumpsUsed < moveStats.maxjumps)
             {
-                InitiateJump(1);
+                InitiateJump(1, false);
                 inputHandler.jumpWasPressed = false;
             }
 
             //double jump
             else if (!isGrounded && numJumpsUsed < moveStats.maxjumps)
             {
-                InitiateJump(1);
+                InitiateJump(1, false);
+                inputHandler.jumpWasPressed = false;
+            }
+
+            else
+            {
+                jumpBufferTimer = moveStats.jumpBufferTime;
                 inputHandler.jumpWasPressed = false;
             }
         }
@@ -235,14 +246,15 @@ public class PlayerController : MonoBehaviour
     }
 
     //applying the actual jump velocity 
-    private void InitiateJump(int numJumps)
+    private void InitiateJump(int numJumps, bool isBufferedJump)
     {
         if (!isJumping)
         {
             isJumping = true;
         }
         numJumpsUsed += numJumps;
-        verticalVelocity = moveStats.maxJumpVelocity;
+        verticalVelocity = isBufferedJump ? moveStats.minJumpVelocity : moveStats.maxJumpVelocity;
+        jumpBufferTimer = 0f;
     }
     #endregion
 
@@ -251,6 +263,11 @@ public class PlayerController : MonoBehaviour
     private void UpdateTimers()
     {
         coyoteTimer -= Time.deltaTime;
+
+        if (!isGrounded)
+        {
+            jumpBufferTimer -= Time.deltaTime;
+        }
     }
     #endregion
 }
