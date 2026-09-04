@@ -18,12 +18,5 @@ MonoBehaviour:
   moveSpeed: 5
   groundAcceleration: 3
   groundDeceleration: 3
-  jumpHeight: 6
-  initialJumpVelocity: 34.285717
-  maxJumps: 2
-  timeTillJumpApex: 0.35
-  jumpHoldTime: 0
-  coyoteTime: 1
-  gravityScale: -97.95919
   groundCheckDistance: 0.1
   ceilingCheckDistance: 0.25

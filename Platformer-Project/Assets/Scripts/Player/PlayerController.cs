@@ -19,16 +19,9 @@ public class PlayerController : MonoBehaviour
     private RaycastHit2D groundHit;
     private RaycastHit2D ceilingHit;
 
-    //jumping flags
-    private bool isFalling = false;
-    public int numJumpsUsed = 0;
-    private bool isJumping = false;
-    private bool endedJumpEarly = false;
-    private bool coyoteUsable = true;
+    //flip check flag 
+    private bool isFacingRight = true;
 
-    //jumping timers
-    private float jumpBufferCounter;
-    private float coyoteTimeCounter;
 
     private void Awake()
     {
@@ -36,16 +29,9 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
-    private void Update()
-    {
-        UpdateTimers();
-    }
-
     private void FixedUpdate()
     {
         CheckCollisions();
-        HandleJumping();
-        HandleGravity();
         HandleMovement();
     }
 
@@ -68,7 +54,6 @@ public class PlayerController : MonoBehaviour
         if (groundHit.collider != null)
         {
             isGrounded = true;
-            numJumpsUsed = 0;
         }
         else
         {
@@ -103,6 +88,7 @@ public class PlayerController : MonoBehaviour
 
         if (isMoving)
         {
+            FlipCheck();
             Vector2 targetVelocity = inputHandler.movement * moveStats.moveSpeed;
             moveVelocity = Vector2.Lerp(moveVelocity, targetVelocity, moveStats.groundAcceleration * Time.fixedDeltaTime);
         }
@@ -116,45 +102,32 @@ public class PlayerController : MonoBehaviour
         rb.linearVelocity = moveVelocity;
     }
 
-    #endregion
-
-    #region jumping
-
-    //handles vertical movement (jumping)
-    private void HandleJumping()
+    private void FlipCheck()
     {
-
-    }
-
-    private void InitiateJump(int numJumps)
-    {
-
-    }
-
-    #endregion
-
-    private void HandleGravity()
-    {
-        if (isGrounded && moveVelocity.y <= 0f)
+        if (isFacingRight && moveVelocity.x < 0)
         {
-            verticalVelocity = moveStats.groundingForce;
+            Flip(false);
+        }
+        else if (!isFacingRight && moveVelocity.x > 0)
+        {
+            Flip(true);
+        }
+    }
+
+    private void Flip (bool turnRight)
+    {
+        if (turnRight)
+        {
+            transform.Rotate(0, 180, 0);
+            isFacingRight = true;
         }
         else
         {
-            float inAirGravity = moveStats.fallAcceleration;
-            if (endedJumpEarly && verticalVelocity > 0f)
-            {
-                inAirGravity *= moveStats.jumpEndEarlyGravityMultiplier;
-            }
-            verticalVelocity = Mathf.MoveTowards(verticalVelocity, -moveStats.fallSpeed, inAirGravity * Time.fixedDeltaTime);
+            transform.Rotate(0, -180, 0);
+            isFacingRight = false;
         }
     }
-
-    #region timers
-    private void UpdateTimers()
-    {
-
-    }
     #endregion
+
 
 }

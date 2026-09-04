@@ -154,7 +154,6 @@ MonoBehaviour:
   feetCol: {fileID: 1385261498}
   headCol: {fileID: 1047972572}
   moveStats: {fileID: 11400000, guid: 4e69b896eb8cd8740be2fc4bcb7a47a8, type: 2}
-  numJumpsUsed: 0
 --- !u!114 &445029950
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -219,7 +218,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -9095717837082945937, guid: 207ee8102dd4143d288186ef0be518ee, type: 3}
+  m_Sprite: {fileID: 310975951, guid: c483493eb3ec0f143b5d78ad823ac661, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
