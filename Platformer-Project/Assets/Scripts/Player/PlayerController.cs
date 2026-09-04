@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour
     private float verticalVelocity = 0f;
 
     //collision flags
-    private bool isGrounded = true;
+    public bool isGrounded = true;
     private bool hitHead = false;
     private RaycastHit2D groundHit;
     private RaycastHit2D ceilingHit;
@@ -22,6 +22,20 @@ public class PlayerController : MonoBehaviour
     //flip check flag 
     private bool isFacingRight = true;
 
+    //jumping flags
+    private bool isJumping = false;
+    private bool isFalling = false;
+    private bool isFastFalling = true;
+    private bool jumpReleasedEarly = false;
+    private bool wasGrounded = true;
+
+    //jumping variables 
+    private float jumpBufferTimer = 0f;
+    private int numJumpsUsed = 0;
+    private float coyoteTimer = 0f;
+    private float jumpHoldTimer = 0f;
+    private float gravityMultiplier;
+    
 
     private void Awake()
     {
@@ -29,9 +43,16 @@ public class PlayerController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
     }
 
+    private void Update()
+    {
+        UpdateTimers();
+        JumpChecks();
+    }
+
     private void FixedUpdate()
     {
         CheckCollisions();
+        HandleJumping();
         HandleMovement();
     }
 
@@ -54,6 +75,12 @@ public class PlayerController : MonoBehaviour
         if (groundHit.collider != null)
         {
             isGrounded = true;
+            numJumpsUsed = 0;
+            if (!isJumping)
+            {
+                isFastFalling = false;
+                verticalVelocity = 0f;
+            }
         }
         else
         {
@@ -70,6 +97,7 @@ public class PlayerController : MonoBehaviour
         if (ceilingHit.collider != null)
         {
             hitHead = true;
+            isFastFalling = true;
             verticalVelocity = 0f;
         }
         else
@@ -81,14 +109,14 @@ public class PlayerController : MonoBehaviour
     #endregion
 
     #region movement
-    //handles horizontal movement, and deceleration when no input is given
+    //handles movement, and deceleration when no input is given
     private void HandleMovement()
     {
         bool isMoving = inputHandler.movement.x != 0; //only checking left/right movement 
 
         if (isMoving)
         {
-            FlipCheck();
+            FlipCheck(); //checks if need to flip the sprite
             Vector2 targetVelocity = inputHandler.movement * moveStats.moveSpeed;
             moveVelocity = Vector2.Lerp(moveVelocity, targetVelocity, moveStats.groundAcceleration * Time.fixedDeltaTime);
         }
@@ -98,6 +126,7 @@ public class PlayerController : MonoBehaviour
             moveVelocity = Vector2.Lerp(moveVelocity, Vector2.zero, moveStats.groundDeceleration * Time.fixedDeltaTime);
         }
 
+        //adds vertical velocity as well from the jump/fall calculations
         moveVelocity.y = verticalVelocity;
         rb.linearVelocity = moveVelocity;
     }
@@ -129,5 +158,82 @@ public class PlayerController : MonoBehaviour
     }
     #endregion
 
+    #region jumping
+    private void JumpChecks()
+    {
+        //starts coyote timer when not on ground
+        if (wasGrounded && !isGrounded)
+        {
+            coyoteTimer = moveStats.jumpCoyoteTime;
+        }
 
+        if (inputHandler.jumpWasPressed)
+        {
+            //initiate jump if grounded or within coyote time
+            if ((isGrounded || coyoteTimer > 0f) && numJumpsUsed < moveStats.maxjumps)
+            {
+                InitiateJump(1);
+                inputHandler.jumpWasPressed = false;
+            }
+
+            //double jump
+            else if (!isGrounded && numJumpsUsed < moveStats.maxjumps)
+            {
+                InitiateJump(1);
+                inputHandler.jumpWasPressed = false;
+            }
+        }
+
+        //apply stronger gravity if jump was released early while still ascending
+        jumpReleasedEarly = isJumping && !inputHandler.jumpIsHeld && verticalVelocity > 0f;
+
+        wasGrounded = isGrounded;
+    }
+
+    private void HandleJumping()
+    {
+
+        if (!isGrounded)
+        {
+            //fall faster if fast falling or released jump button early
+            if (isFastFalling || jumpReleasedEarly)
+            {
+                gravityMultiplier = moveStats.gravityOnReleaseMultiplier;
+            }
+            else
+            {
+                gravityMultiplier = 1f;
+            }
+            verticalVelocity += moveStats.gravity * gravityMultiplier * Time.fixedDeltaTime;
+        }
+
+        //resets isJumping when landed
+        if (isGrounded && verticalVelocity <= 0f)
+        {
+            isJumping = false;
+        }
+
+        //clamp fall speed 
+        verticalVelocity = Mathf.Clamp(verticalVelocity, -moveStats.maxFallSpeed, moveStats.maxFallSpeed);
+    }
+
+    //applying the actual jump velocity 
+    private void InitiateJump(int numJumps)
+    {
+        if (!isJumping)
+        {
+            isJumping = true;
+        }
+        numJumpsUsed += numJumps;
+        verticalVelocity = moveStats.maxJumpVelocity;
+    }
+    #endregion
+
+    #region timers
+
+    private void UpdateTimers()
+    {
+        coyoteTimer -= Time.deltaTime;
+    }
+    #endregion
 }

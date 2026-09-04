@@ -12,7 +12,38 @@ public class PlayerMovementStats : ScriptableObject
     public float groundDeceleration;
 
     [Header("Collision Stats")]
+    //raycast distance for ground and ceiling checks
     public float groundCheckDistance;
     public float ceilingCheckDistance;
 
+    [Header("Jump Stats")]
+    public float maxJumpHeight; //how high will jump
+    public float timeTillJumpApex; //time it takes to reach the apex of the jump
+    public float gravityOnReleaseMultiplier; //multiplier for gravity when jump button is released early
+    public float maxFallSpeed; //maximum speed the player can fall
+    public int maxjumps;
+
+    [Header("Jump Buffer")]
+    public float jumpBufferTime; //how long the player can buffer a jump input before landing
+
+    [Header("Jump Coyote Time")]
+    public float jumpCoyoteTime; //how long the player can jump after leaving the ground
+
+    public float gravity;
+    public float maxJumpVelocity;
+    private void OnValidate()
+    {
+        CalculateValues();
+    }
+
+    private void OnEnable()
+    {
+        CalculateValues();
+    }
+
+    private void CalculateValues()
+    {
+        gravity = -(2f * maxJumpHeight) / Mathf.Pow(timeTillJumpApex, 2f);
+        maxJumpVelocity = Mathf.Abs(gravity) * timeTillJumpApex;
+    }
 }

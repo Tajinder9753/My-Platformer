@@ -20,3 +20,12 @@ MonoBehaviour:
   groundDeceleration: 3
   groundCheckDistance: 0.1
   ceilingCheckDistance: 0.25
+  maxJumpHeight: 10
+  timeTillJumpApex: 0.35
+  gravityOnReleaseMultiplier: 2
+  maxFallSpeed: 50
+  maxjumps: 2
+  jumpBufferTime: 0
+  jumpCoyoteTime: 0.5
+  gravity: -163.26532
+  maxJumpVelocity: 57.14286

@@ -5,7 +5,7 @@ public class InputHandler : MonoBehaviour, PlayerInput.IPlayerActions
     private PlayerInput playerInputActions;
     public Vector2 movement;
     public bool jumpWasPressed;
-    public bool jumpWasReleased;
+    public bool jumpIsHeld;
 
     private void Awake()
     {
@@ -23,15 +23,15 @@ public class InputHandler : MonoBehaviour, PlayerInput.IPlayerActions
     }
     public void OnJump(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (context.performed)
+        if (context.started)
         {
             jumpWasPressed = true;
-            jumpWasReleased = false;
+            jumpIsHeld = true;
         }
         else if (context.canceled)
         {
             jumpWasPressed = false;
-            jumpWasReleased = true;
+            jumpIsHeld = false;
         }
     }
 
