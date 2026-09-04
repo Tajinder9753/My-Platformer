@@ -37,6 +37,10 @@ public class PlayerMovementStats : ScriptableObject
     public float gravity;
     public float maxJumpVelocity;
     public float minJumpVelocity; //for buffered jump 
+
+    [Header("Wall Slide Values")]
+    public float wallSlideGravityMultiplier;
+
     private void OnValidate()
     {
         CalculateValues();

@@ -23,11 +23,14 @@ MonoBehaviour:
   cornerCheckDistance: 0.05
   nudgeDistance: 0.15
   maxJumpHeight: 6
+  minJumpHeight: 1.5
   timeTillJumpApex: 0.35
   gravityOnReleaseMultiplier: 2
   maxFallSpeed: 50
-  maxjumps: 2
-  jumpBufferTime: 0
+  maxjumps: 1
+  jumpBufferTime: 1
   jumpCoyoteTime: 0.5
   gravity: -97.95919
   maxJumpVelocity: 34.285717
+  minJumpVelocity: 17.142857
+  wallSlideGravityMultiplier: 1

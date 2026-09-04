@@ -5,7 +5,7 @@ public class PlayerController : MonoBehaviour
     //references
     private InputHandler inputHandler;
     private Rigidbody2D rb;
-    [SerializeField]private Collider2D feetCol;
+    [SerializeField] private Collider2D feetCol;
     [SerializeField] private Collider2D headCol;
     [SerializeField] private PlayerMovementStats moveStats;
 
@@ -17,7 +17,7 @@ public class PlayerController : MonoBehaviour
     public bool isGrounded = true;
     private bool hitHead = false;
     private RaycastHit2D groundHit;
-    private RaycastHit2D ceilingHit;
+    public bool isWallSliding = false;
 
     //flip check flag 
     private bool isFacingRight = true;
@@ -35,7 +35,7 @@ public class PlayerController : MonoBehaviour
     private float coyoteTimer = 0f;
     private float jumpHoldTimer = 0f;
     private float gravityMultiplier;
-    
+
 
     private void Awake()
     {
@@ -63,6 +63,7 @@ public class PlayerController : MonoBehaviour
     {
         IsGrounded();
         BumpedHead();
+        TouchingWall();
     }
 
     //checks if the player is grounded by performing a boxcast downwards from the feet collider 
@@ -125,6 +126,28 @@ public class PlayerController : MonoBehaviour
         else
         {
             hitHead = false;
+        }
+    }
+
+    private void TouchingWall()
+    {
+        float rayLength = moveStats.ceilingCheckDistance;
+        Vector2 leftOrigin = new Vector2(headCol.bounds.min.x, headCol.bounds.max.y);
+        Vector2 rightOrigin = new Vector2(headCol.bounds.max.x, headCol.bounds.max.y);
+
+        RaycastHit2D leftHit = Physics2D.Raycast(leftOrigin, Vector2.left, rayLength, moveStats.groundLayer);
+        RaycastHit2D rightHit = Physics2D.Raycast(rightOrigin, Vector2.right, rayLength, moveStats.groundLayer);
+
+        bool hitLeft = leftHit.collider != null;
+        bool hitRight = rightHit.collider != null;
+
+        if (hitLeft || hitRight)
+        {
+            isWallSliding = true;
+        }
+        else
+        {
+            isWallSliding = false;
         }
     }
 
@@ -232,7 +255,17 @@ public class PlayerController : MonoBehaviour
             {
                 gravityMultiplier = 1f;
             }
-            verticalVelocity += moveStats.gravity * gravityMultiplier * Time.fixedDeltaTime;
+
+            if (isWallSliding)
+            {
+                gravityMultiplier = moveStats.wallSlideGravityMultiplier;
+                verticalVelocity = moveStats.gravity * gravityMultiplier * Time.fixedDeltaTime;
+            }
+            else
+            {
+                verticalVelocity += moveStats.gravity * gravityMultiplier * Time.fixedDeltaTime;
+
+            }
         }
 
         //resets isJumping when landed
