@@ -22,15 +22,22 @@ MonoBehaviour:
   ceilingCheckDistance: 0.15
   cornerCheckDistance: 0.05
   nudgeDistance: 0.15
-  maxJumpHeight: 6
+  maxJumpHeight: 6.5
   minJumpHeight: 1.5
   timeTillJumpApex: 0.35
   gravityOnReleaseMultiplier: 2
   maxFallSpeed: 50
   maxjumps: 1
   jumpBufferTime: 1
-  jumpCoyoteTime: 0.5
-  gravity: -97.95919
-  maxJumpVelocity: 34.285717
-  minJumpVelocity: 17.142857
+  jumpCoyoteTime: 0.25
+  gravity: -106.12245
+  maxJumpVelocity: 37.142857
+  minJumpVelocity: 17.842852
   wallSlideGravityMultiplier: 1
+  wallDetectionRayHeightMultiplier: 0.9
+  wallDetectionRayLength: 0.125
+  wallJumpHeight: 4.5
+  wallJumpDirection: {x: -10, y: 6.5}
+  wallJumpCoyoteTime: 0.1
+  wallJumpGravity: -73.46939
+  wallJumpVelocity: 25.714287

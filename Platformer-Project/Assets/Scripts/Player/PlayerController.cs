@@ -6,7 +6,7 @@ public class PlayerController : MonoBehaviour
     private InputHandler inputHandler;
     private Rigidbody2D rb;
     [SerializeField] private Collider2D feetCol;
-    [SerializeField] private Collider2D headCol;
+    [SerializeField] private Collider2D bodyCol;
     [SerializeField] private PlayerMovementStats moveStats;
 
     //current velocity of player
@@ -18,6 +18,9 @@ public class PlayerController : MonoBehaviour
     private bool hitHead = false;
     private RaycastHit2D groundHit;
     public bool isWallSliding = false;
+    private bool isTouchingWall = false;
+    private RaycastHit2D wallHit;
+    private RaycastHit2D lastWallHit;
 
     //flip check flag 
     private bool isFacingRight = true;
@@ -35,6 +38,7 @@ public class PlayerController : MonoBehaviour
     private float coyoteTimer = 0f;
     private float jumpHoldTimer = 0f;
     private float gravityMultiplier;
+    private float wallJumpCoyoteTimer = 0f;
 
 
     private void Awake()
@@ -79,8 +83,10 @@ public class PlayerController : MonoBehaviour
             if (!isJumping)
             {
                 isFastFalling = false;
+                isWallSliding = false;
                 numJumpsUsed = 0;
                 verticalVelocity = 0f;
+                wallJumpCoyoteTimer = 0f;
             }
 
             if (jumpBufferTimer > 0f)
@@ -99,8 +105,8 @@ public class PlayerController : MonoBehaviour
         float rayLength = moveStats.ceilingCheckDistance;
         float cornerCheckDistance = moveStats.cornerCheckDistance;
 
-        Vector2 leftOrigin = new Vector2(headCol.bounds.min.x + cornerCheckDistance, headCol.bounds.max.y);
-        Vector2 rightOrigin = new Vector2(headCol.bounds.max.x - cornerCheckDistance, headCol.bounds.max.y);
+        Vector2 leftOrigin = new Vector2(bodyCol.bounds.min.x + cornerCheckDistance, bodyCol.bounds.max.y);
+        Vector2 rightOrigin = new Vector2(bodyCol.bounds.max.x - cornerCheckDistance, bodyCol.bounds.max.y);
 
         RaycastHit2D leftHit = Physics2D.Raycast(leftOrigin, Vector2.up, rayLength, moveStats.groundLayer);
         RaycastHit2D rightHit = Physics2D.Raycast(rightOrigin, Vector2.up, rayLength, moveStats.groundLayer);
@@ -131,23 +137,37 @@ public class PlayerController : MonoBehaviour
 
     private void TouchingWall()
     {
-        float rayLength = moveStats.ceilingCheckDistance;
-        Vector2 leftOrigin = new Vector2(headCol.bounds.min.x, headCol.bounds.max.y);
-        Vector2 rightOrigin = new Vector2(headCol.bounds.max.x, headCol.bounds.max.y);
+        float originEndPoint = 0f;
+        originEndPoint = isFacingRight ? bodyCol.bounds.max.x : bodyCol.bounds.min.x;
 
-        RaycastHit2D leftHit = Physics2D.Raycast(leftOrigin, Vector2.left, rayLength, moveStats.groundLayer);
-        RaycastHit2D rightHit = Physics2D.Raycast(rightOrigin, Vector2.right, rayLength, moveStats.groundLayer);
+        float adjustedHeight = bodyCol.bounds.size.y * moveStats.wallDetectionRayHeightMultiplier;
 
-        bool hitLeft = leftHit.collider != null;
-        bool hitRight = rightHit.collider != null;
+        Vector2 boxCastOrigin = new Vector2(originEndPoint, bodyCol.bounds.center.y);
+        Vector2 boxCastSize = new Vector2(moveStats.wallDetectionRayLength, adjustedHeight);
 
-        if (hitLeft || hitRight)
+        wallHit = Physics2D.BoxCast(boxCastOrigin, boxCastSize, 0f, transform.right, moveStats.wallDetectionRayLength, moveStats.groundLayer);
+
+        bool wasSlidingLastFrame = isWallSliding;
+
+        if (wallHit.collider != null)
         {
-            isWallSliding = true;
+            isTouchingWall = true;
+            lastWallHit = wallHit;
+
+            if (!isGrounded && verticalVelocity <= 0f)
+            {
+                isWallSliding = true;
+            }
         }
         else
         {
+            isTouchingWall = false;
             isWallSliding = false;
+        }
+
+        if (wasSlidingLastFrame && !isWallSliding && !isGrounded)
+        {
+            wallJumpCoyoteTimer = moveStats.wallJumpCoyoteTime;
         }
     }
 
@@ -157,9 +177,28 @@ public class PlayerController : MonoBehaviour
     //handles movement, and deceleration when no input is given
     private void HandleMovement()
     {
-        bool isMoving = inputHandler.movement.x != 0; //only checking left/right movement 
+        bool isMoving = inputHandler.movement.x != 0; //only checking left/right movement
+        bool movingRight = inputHandler.movement.x > 0;
+        bool stopMovement = false;
+        if (isWallSliding)
+        {
+            if (isFacingRight && movingRight)
+            {
+                moveVelocity.x = 0;
+                stopMovement = true;
+            }
+            else if (!isFacingRight && !movingRight)
+            {
+                moveVelocity.x = 0;
+                stopMovement = true;
+            }
+            else
+            {
+                stopMovement = false;
+            }
+        }
 
-        if (isMoving)
+        if (isMoving && !stopMovement)
         {
             FlipCheck(); //checks if need to flip the sprite
             Vector2 targetVelocity = inputHandler.movement * moveStats.moveSpeed;
@@ -221,6 +260,12 @@ public class PlayerController : MonoBehaviour
                 inputHandler.jumpWasPressed = false;
             }
 
+            //wall jump
+            else if (!isGrounded && (isWallSliding || wallJumpCoyoteTimer > 0f))
+            {
+                InitiateWallJump();
+            }
+
             //double jump
             else if (!isGrounded && numJumpsUsed < moveStats.maxjumps)
             {
@@ -256,7 +301,9 @@ public class PlayerController : MonoBehaviour
                 gravityMultiplier = 1f;
             }
 
-            if (isWallSliding)
+            bool inCoyoteBuffer = wallJumpCoyoteTimer > 0f;
+
+            if (isWallSliding || inCoyoteBuffer)
             {
                 gravityMultiplier = moveStats.wallSlideGravityMultiplier;
                 verticalVelocity = moveStats.gravity * gravityMultiplier * Time.fixedDeltaTime;
@@ -289,6 +336,33 @@ public class PlayerController : MonoBehaviour
         verticalVelocity = isBufferedJump ? moveStats.minJumpVelocity : moveStats.maxJumpVelocity;
         jumpBufferTimer = 0f;
     }
+
+    private void InitiateWallJump()
+    {
+        isJumping = true;
+        isWallSliding = false;
+        isTouchingWall = false;
+        wallJumpCoyoteTimer = 0f;
+
+        verticalVelocity = moveStats.wallJumpVelocity;
+
+        int dirMultiplier = 0;
+        Vector2 hitPoint = lastWallHit.collider.ClosestPoint(bodyCol.bounds.center);
+
+        //send backwards if facing wall 
+        if (hitPoint.x > transform.position.x)
+        {
+            dirMultiplier = -1;
+        }
+        //otherwise forwards
+        else
+        {
+            dirMultiplier = 1;
+        }
+
+        moveVelocity.x = Mathf.Abs(moveStats.wallJumpDirection.x) * dirMultiplier;
+    }
+
     #endregion
 
     #region timers
@@ -300,6 +374,11 @@ public class PlayerController : MonoBehaviour
         if (!isGrounded)
         {
             jumpBufferTimer -= Time.deltaTime;
+        }
+
+        if (!isTouchingWall)
+        {
+            wallJumpCoyoteTimer -= Time.deltaTime; 
         }
     }
     #endregion

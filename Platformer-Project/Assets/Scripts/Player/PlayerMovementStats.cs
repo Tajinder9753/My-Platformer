@@ -40,6 +40,17 @@ public class PlayerMovementStats : ScriptableObject
 
     [Header("Wall Slide Values")]
     public float wallSlideGravityMultiplier;
+    public float wallDetectionRayHeightMultiplier;
+    public float wallDetectionRayLength;
+
+    [Header("Wall Jump Values")]
+    public float wallJumpHeight;
+    public Vector2 wallJumpDirection = new Vector2(-20f, 6.5f);
+    public float wallJumpCoyoteTime;
+
+    //wall jump
+    public float wallJumpGravity;
+    public float wallJumpVelocity;
 
     private void OnValidate()
     {
@@ -53,8 +64,13 @@ public class PlayerMovementStats : ScriptableObject
 
     private void CalculateValues()
     {
+        //normal gravity
         gravity = -(2f * maxJumpHeight) / Mathf.Pow(timeTillJumpApex, 2f);
         maxJumpVelocity = Mathf.Abs(gravity) * timeTillJumpApex;
         minJumpVelocity = Mathf.Sqrt(2 * Mathf.Abs(gravity) * minJumpHeight);
+
+        //wall jump gravity
+        wallJumpGravity = -(2f * wallJumpHeight) / Mathf.Pow(timeTillJumpApex, 2f);
+        wallJumpVelocity = Mathf.Abs(wallJumpGravity) * timeTillJumpApex;
     }
 }
